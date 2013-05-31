@@ -1,4 +1,5 @@
 node_modules
 build
 token.json
+POST.json
 .DS_Store
