@@ -1,0 +1,29 @@
+{
+  "name": "bitbucket-trello",
+  "version": "0.0.2",
+  "private": true,
+  "dependencies": {
+    "LiveScript": "*",
+    "coffee-script": "*",
+    "express": "3.x",
+    "eco": "*",
+    "colors": "*",
+    "async": "*",
+    "prelude-ls": "*",
+    "less": "*",
+    "request": "*"
+  },
+  "scripts": {
+    "test": "mocha",
+    "postinstall":"make build",
+    "start": "node build/app.js"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*"
+  },
+  "engines": {
+    "node": "0.10.9",
+    "npm": "1.2.21"
+  }
+}
