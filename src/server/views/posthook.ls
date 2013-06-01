@@ -121,17 +121,12 @@ module.exports = (req,res) ->
   try body = JSON.parse body
   return res.send body if //invalid//.test body
 
-
+  console.log "[__POST__]", req.body
   /**
    * LET'S GO
    */
 
-  msg = req.body.payload
-  acc = []
-  for i in msg.commits
-    obj = qs.parse i.message.split("?", 2)[1].trim!
-    obj.message = i.message.split("?", 2)[0].trim!
-    acc.push obj
+  msg = req.body.payload || {}
 
   Client = switch req.params.provider
   | "b"        => BitTrelloClient
@@ -140,7 +135,7 @@ module.exports = (req,res) ->
 
   client = new Client body, req.body.payload
 
-  [client.handle-commit i, null for i in msg.commits]# callback TODO: implement async calls
+  [client.handle-commit i, null for i in msg.commits || []]# callback TODO: implement async calls
 
   res.json do
     acc: acc
