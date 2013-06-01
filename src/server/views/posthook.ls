@@ -138,6 +138,5 @@ module.exports = (req,res) ->
   [client.handle-commit i, null for i in msg.commits || []]# callback TODO: implement async calls
 
   res.json do
-    acc: acc
     req-body: body
     body: req.body
