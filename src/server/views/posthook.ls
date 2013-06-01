@@ -121,7 +121,6 @@ module.exports = (req,res) ->
   try body = JSON.parse body
   return res.send body if //invalid//.test body
 
-  console.log "[__POST__]".green, req.body
   /**
    * LET'S GO
    */
@@ -130,12 +129,14 @@ module.exports = (req,res) ->
   catch
     msg = req.body.payload
 
+  console.log "[__POST__]".green, msg
+
   Client = switch req.params.provider
   | "b"        => BitTrelloClient
   | "g"        => GitHubTrelloClient
   | otherwise  => BitTrelloClient
 
-  client = new Client body, req.body.payload
+  client = new Client body, msg
 
   [client.handle-commit i, null for i in msg.commits || []]# callback TODO: implement async calls
 
