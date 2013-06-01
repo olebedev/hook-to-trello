@@ -119,6 +119,10 @@ module.exports = (req,res) ->
   try body = JSON.parse body
   return res.send body if //invalid//.test body
 
+  if req.params.provider is "g"
+    res.send "ok"
+    return console.log req.body
+
   /**
    * LET'S GO
    */

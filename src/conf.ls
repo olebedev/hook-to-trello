@@ -6,7 +6,7 @@ require! {
 
 c = new events.EventEmitter
 try
-  c <<< JSON.parse fs.readFileSync "./token.json"
+  c <<< JSON.parse fs.readFileSync "./default.json"
 catch e
   c.token = process.env.TOKEN
   c.key = process.env.KEY
