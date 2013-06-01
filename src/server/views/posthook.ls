@@ -141,7 +141,11 @@ module.exports = (req,res) ->
   | otherwise  => BitTrelloClient
 
   client = new Client body, msg
-  acc = [(-> client.handle-commit.call(client, i, &0)) for i in msg.commits || []]
+  acc = []
+  for i in msg.commits || []
+    ((i)->
+      acc.push -> client.handle-commit.call(client, i, &0)
+    )(i)
 
   async.waterfall acc, (err)-> console.log err.toString!.red if err?
   res.json do
