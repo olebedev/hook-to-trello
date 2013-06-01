@@ -7,7 +7,7 @@ clean:
 	@rm -rf build/bg build/server build/static build/templates build/app.js build/conf.js
 	@echo "\033[1;33mClean done!\033[m"
 
-build: $(LSC) $(TMPLS) $(LESS) $(COPY)
+build: $(LSC) $(TMPLS) $(COPY)
 	@echo "\033[1;33mYep!\033[m"
 
 build/%.js: src/%.ls

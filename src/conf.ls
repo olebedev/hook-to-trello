@@ -11,5 +11,6 @@ catch e
   c.token = process.env.TOKEN
   c.key = process.env.KEY
   c.secret = process.env.SECRET
-  
+
+c.people-file = process.env.PEOPLE || "./people.json"
 module.exports = c

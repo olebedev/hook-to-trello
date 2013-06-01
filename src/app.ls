@@ -6,11 +6,7 @@ require! {
 }
 
 app = express!
-app.use express.favicon!
 app.use express.bodyParser!
-app.use '/static', express.static __dirname + '/static'
-app.use "/static/libs", express.static __dirname + '/vendors'
-app.use "/static/tmpl", express.static __dirname + '/templates'
 
 app.configure "development", ->
   app.use express.errorHandler do

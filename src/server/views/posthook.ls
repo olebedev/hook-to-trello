@@ -1,15 +1,17 @@
 require! {
+  \fs
   \colors
   \request
+  \async
   \../../conf
-  qs: \querystring
   _:\prelude-ls
+  qs: \querystring
 }
 
 default-commit = {}
 
-class TrelloClient
-  (@board, @payload, @token=conf.token, @key=conf.key) ->
+class BitTrelloClient
+  (@board, @payload, @token, @key) ->
   
   match-list: (name) ->
     for list in @board.lists
@@ -51,25 +53,70 @@ class TrelloClient
     next err
 
   action-move: (commit, next) -->
-    err, card <~ @get-card commit.action.card
-    err, comment-result <~ @add-comment card.id, "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}" # commit.message
-    list = @match-list commit.action.list
+
+    err, card <~ @get-card commit.action.move
+    unless commit.action.noco? 
+      err, comment-result <~ @add-comment card.id, "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}" # commit.message
+    
+    list = @match-list commit.action.to
     if list?
       err, updt <~ @update-card card.id, {idList: list.id}
       next!
     else
+      console.log "list not found", commit.action.to
       process.next-tick next
 
   handle-commit: (commit={}, next=(->)) -->
+    console.log "call handle-commit".green, @payload.user
     commit = {} <<< default-commit <<< commit
     commit.action = qs.parse commit.message.split("?", 2)[1].trim! 
     commit.message = commit.message.split("?", 2)[0].trim! # clean message
+    err <~ @set-action-author commit
+    return next err if err?
+    for k,v of commit.action
+      switch k
+      | "move" => @action-move commit, next
 
-    switch commit.action.act
-    | "move" => @action-move commit, next
+  read-http-file: (url, next) ->
+
+    err, resp, body <- request url
+    console.log "fetch file from http".green, url.grey
+    next err, body
+
+  set-action-author: (commit, next) ->
+    return process.next-tick(next) if @token? and @key?
+    
+    fn = if conf.people-file.match(//http//)? then @read-http-file else fs.read-file
+    err, people <~ fn conf.people-file
+    
+    if err?
+      # default token & key
+      @token = conf.token
+      @key   = conf.key
+      return next err if err?
+
+    try people = JSON.parse people
+    unless typeof! people is "Object"
+      return next new Error("The file type(#{typeof! people}) is not as expected.")
+
+    for k,v of people
+      for alias in v.aliases || [k]
+        if alias is @payload.user
+          @token = v.token
+          @key = v.key
+          return next!
+
+    # default token & key
+    @token = conf.token
+    @key   = conf.key
+
+    next!
+
+class GitHubTrelloClient extends BitTrelloClient
 
 
 module.exports = (req,res) ->
+  req.params.id = req.params.provider unless req.params.id?
   err, resp, body <~ request "https://api.trello.com/1/board/#{req.params.id}?token=#{conf.token}&key=#{conf.key}&lists=all"
   try body = JSON.parse body
   return res.send body if //invalid//.test body
@@ -86,7 +133,12 @@ module.exports = (req,res) ->
     obj.message = i.message.split("?", 2)[0].trim!
     acc.push obj
 
-  client = new TrelloClient body, req.body.payload
+  Client = switch req.params.provider
+  | "b"        => BitTrelloClient
+  | "g"        => GitHubTrelloClient
+  | otherwise  => BitTrelloClient
+
+  client = new Client body, req.body.payload
 
   [client.handle-commit i, null for i in msg.commits]# callback TODO: implement async calls
 
