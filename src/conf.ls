@@ -1,16 +1,13 @@
 require! {
   \events
-  \async
   \fs
 }
 
-c = new events.EventEmitter
-try
-  c <<< JSON.parse fs.readFileSync "./default.json"
-catch e
-  c.token = process.env.TOKEN
-  c.key = process.env.KEY
-  c.secret = process.env.SECRET
+c        = new events.EventEmitter
+c.token  = process.env.TOKEN
+c.key    = process.env.KEY
+c.users  = process.env.USERS
 
-c.people-file = process.env.PEOPLE || "./people.json"
+try c <<< JSON.parse fs.readFileSync "./default.json"
+
 module.exports = c

@@ -54,7 +54,7 @@ class BitTrelloClient
     next err
 
   make-message: (commit) ->
-    "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}" # commit.message
+    "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}"
 
   action-move: (commit, next) -->
     err, card <~ @get-card commit.action.move
@@ -69,7 +69,7 @@ class BitTrelloClient
       console.log "list not found", commit.action.to
       process.next-tick next
 
-  handle-commit: (commit={}, next=(->)) -->
+  handle-commit: (commit={}, next) -->
     commit = {} <<< default-commit <<< commit
     commit.action = qs.parse commit.message.split("?", 2)[1].trim! 
     commit.message = commit.message.split("?", 2)[0].trim! # clean message
@@ -77,7 +77,7 @@ class BitTrelloClient
     return next err if err?
     for k,v of commit.action
       switch k
-      | "move" => @action-move commit, next
+      | "move" => return @action-move commit, next
 
   read-http-file: (url, next) ->
 
@@ -88,10 +88,10 @@ class BitTrelloClient
   set-action-author: (commit, next) ->
     return process.next-tick(next) if @token? and @key?
     
-    fn = if conf.people-file.match(//http//)? then @read-http-file else fs.read-file
-    err, people <~ fn conf.people-file
+    fn = if conf.users.match(//http//)? then @read-http-file else fs.read-file
+    err, people <~ fn conf.users
     
-    if err?
+    if err? or !conf.users?
       # default token & key
       @token = conf.token
       @key   = conf.key
