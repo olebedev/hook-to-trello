@@ -11,6 +11,7 @@ require! {
 default-commit = {}
 
 class BitTrelloClient
+
   (@board, @payload, @token, @key) ->
   
   match-list: (name) ->
@@ -52,10 +53,13 @@ class BitTrelloClient
 
     next err
 
+  make-message: (commit) ->
+    "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}" # commit.message
+
   action-move: (commit, next) -->
     err, card <~ @get-card commit.action.move
     unless commit.action.noco? 
-      err, comment-result <~ @add-comment card.id, "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}" # commit.message
+      err, comment-result <~ @add-comment card.id, @make-message(commit)
     
     list = @match-list commit.action.to
     if list?
@@ -99,7 +103,7 @@ class BitTrelloClient
 
     for k,v of people
       for alias in v.aliases || [k]
-        if alias is @payload.user
+        if alias is @payload.user || commit.committer.name # the second for github
           @token = v.token
           @key = v.key
           return next!
@@ -112,16 +116,14 @@ class BitTrelloClient
 
 class GitHubTrelloClient extends BitTrelloClient
 
+  make-message: (commit) ->
+    "#{commit.committer.name}: #{commit.message}\n\n#{commit.url}"
 
 module.exports = (req,res) ->
   req.params.id = req.params.provider unless req.params.id?
   err, resp, body <~ request "https://api.trello.com/1/board/#{req.params.id}?token=#{conf.token}&key=#{conf.key}&lists=all"
   try body = JSON.parse body
   return res.send body if //invalid//.test body
-
-  if req.params.provider is "g"
-    res.send "ok"
-    return console.log req.body
 
   /**
    * LET'S GO
@@ -131,7 +133,7 @@ module.exports = (req,res) ->
   catch
     msg = req.body.payload
 
-  console.log "[__POST__]".green, "by #{msg.user}".grey
+  console.log "[__POST__]".green, "by #{msg.user || msg.pusher?.name}".grey
 
   Client = switch req.params.provider
   | "b"        => BitTrelloClient
@@ -139,9 +141,9 @@ module.exports = (req,res) ->
   | otherwise  => BitTrelloClient
 
   client = new Client body, msg
+  acc = [(-> client.handle-commit.call(client, i, &0)) for i in msg.commits || []]
 
-  [client.handle-commit i, null for i in msg.commits || []] # callback TODO: implement async calls
-
+  async.waterfall acc, (err)-> console.log err.toString!.red if err?
   res.json do
     req-body: body
     body: req.body
