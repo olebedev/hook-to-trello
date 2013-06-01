@@ -121,12 +121,14 @@ module.exports = (req,res) ->
   try body = JSON.parse body
   return res.send body if //invalid//.test body
 
-  console.log "[__POST__]", req.body
+  console.log "[__POST__]".green, req.body
   /**
    * LET'S GO
    */
-
-  msg = req.body.payload || {}
+  try
+    msg = JSON.parse req.body.payload || '{}'
+  catch
+    msg = req.body.payload
 
   Client = switch req.params.provider
   | "b"        => BitTrelloClient
