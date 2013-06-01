@@ -1,6 +1,6 @@
 node_modules
 build
-token.json
+default.json
 POST.json
 people.json
 .DS_Store

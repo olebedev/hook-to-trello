@@ -7,6 +7,7 @@ require! {
 
 app = express!
 app.use express.bodyParser!
+app.use express.favicon!
 
 app.configure "development", ->
   app.use express.errorHandler do
