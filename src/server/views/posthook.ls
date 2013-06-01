@@ -53,7 +53,6 @@ class BitTrelloClient
     next err
 
   action-move: (commit, next) -->
-
     err, card <~ @get-card commit.action.move
     unless commit.action.noco? 
       err, comment-result <~ @add-comment card.id, "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}" # commit.message
@@ -67,7 +66,6 @@ class BitTrelloClient
       process.next-tick next
 
   handle-commit: (commit={}, next=(->)) -->
-    console.log "call handle-commit".green, @payload.user
     commit = {} <<< default-commit <<< commit
     commit.action = qs.parse commit.message.split("?", 2)[1].trim! 
     commit.message = commit.message.split("?", 2)[0].trim! # clean message
@@ -129,7 +127,7 @@ module.exports = (req,res) ->
   catch
     msg = req.body.payload
 
-  console.log "[__POST__]".green, msg
+  console.log "[__POST__]".green, "by #{msg.user}".grey
 
   Client = switch req.params.provider
   | "b"        => BitTrelloClient
@@ -138,7 +136,7 @@ module.exports = (req,res) ->
 
   client = new Client body, msg
 
-  [client.handle-commit i, null for i in msg.commits || []]# callback TODO: implement async calls
+  [client.handle-commit i, null for i in msg.commits || []] # callback TODO: implement async calls
 
   res.json do
     req-body: body
