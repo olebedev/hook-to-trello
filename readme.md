@@ -64,4 +64,4 @@ This is a one-time operation for each user:
 
 ### TODO
 
-Actions for checklicts.
+Actions for checklists.
