@@ -10,7 +10,8 @@ For more information about webhooks you can read at [github](https://help.github
 $ git commit -m 'Finalized details  --move 124 --to finish'
 ```
 
-It will update `card #124`: add commit message + link as comment and move it to a list `finish`. Also you can specify `noco=1` if you don't want to write a comment.
+It will update `card #124`: add commit message + link as comment and move it to a list `finish`. Also you can specify `noco=1` if you don't want to write a comment.  
+The message and commands shold be spareted by two spaces, by default. You can change it.
 
 ### Config & Deploy
 
