@@ -49,11 +49,11 @@ $ git push heroku <current branch>:master
 If deploy was good, you can find application url in stdout. Usual it look like this: `https://sheltered-brook-4402.herokuapp.com`. This _URL_ to be useful in the next step.  
 After that you need setup you repo for webhook. Read about it [here](https://help.github.com/articles/post-receive-hooks) or [here](https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management).  
 
-For setup the repo simply add your heroku app _URL_ + "/`prefix`/`board_id`" as a WebHook url under "Admin" for your repository. Where `prefix` is `g` for github or `b` for bitbucket. And `board_id` you can get from the Trello board _URL_, for example https://trello.com/board/trello-development/4d5ea62fd76aa1136000000c the board id is 4d5ea62fd76aa1136000000ca  
+For setup the repo simply add your heroku app _URL_ + "/`<prefix>`/`<board_id>`" as a webhook url under "admin" for your repository. Where `<prefix>` is `g` for github or `b` for bitbucket. And `<board_id>` you can get from the Trello board _URL_, for example https://trello.com/board/trello-development/4d5ea62fd76aa1136000000c the board id is 4d5ea62fd76aa1136000000ca  
 
 Example:  
-  * github: `https://sheltered-brook-4402.herokuapp.com/g/4d5ea62fd76aa1136000000ca`
-  * bitbucket: `https://sheltered-brook-4402.herokuapp.com/b/4d5ea62fd76aa1136000000ca`
+  * for github: `https://sheltered-brook-4402.herokuapp.com/g/4d5ea62fd76aa1136000000ca`
+  * for bitbucket: `https://sheltered-brook-4402.herokuapp.com/b/4d5ea62fd76aa1136000000ca`
 
 ### Key & Token 
 
