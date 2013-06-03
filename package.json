@@ -10,7 +10,6 @@
     "colors": "*",
     "async": "*",
     "prelude-ls": "*",
-    "less": "*",
     "request": "*",
     "optimist": "~0.5.2"
   },
@@ -20,6 +19,7 @@
     "start": "node build/app.js"
   },
   "devDependencies": {
+    "less": "*",
     "mocha": "*",
     "chai": "*"
   },
