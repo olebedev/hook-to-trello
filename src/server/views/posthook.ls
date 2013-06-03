@@ -6,6 +6,7 @@ require! {
   \../../conf
   _:\prelude-ls
   qs: \querystring
+  \./help
 }
 
 default-commit = {}
@@ -57,25 +58,23 @@ class BitTrelloClient
     "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}"
 
   action-move: (commit, next) -->
-    err, card <~ @get-card commit.action.move
-    unless commit.action.noco? 
+    err, card <~ @get-card commit.options.move
+    unless commit.options.noco? 
       err, comment-result <~ @add-comment card.id, @make-message(commit)
     
-    list = @match-list commit.action.to
+    list = @match-list commit.options.to
     if list?
       err, updt <~ @update-card card.id, {idList: list.id}
       next!
     else
-      console.log "list not found", commit.action.to
+      console.log "list not found", commit.options.to
       process.next-tick next
 
   handle-commit: (commit={}, next) -->
-    commit = {} <<< default-commit <<< commit
-    commit.action = qs.parse commit.message.split("?", 2)[1].trim! 
-    commit.message = commit.message.split("?", 2)[0].trim! # clean message
+    commit = {} <<< default-commit <<< commit <<< help.parse commit.message
     err <~ @set-action-author commit
     return next err if err?
-    for k,v of commit.action
+    for k,v of commit.options
       switch k
       | "move" => return @action-move commit, next
 
@@ -144,7 +143,7 @@ module.exports = (req,res) ->
   acc = []
   for i in msg.commits || []
     ((i)->
-      acc.push -> client.handle-commit.call(client, i, &0)
+      acc.push -> client.handle-commit i, &0
     )(i)
 
   async.waterfall acc, (err)-> console.log err.toString!.red if err?

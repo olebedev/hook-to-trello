@@ -1,6 +1,6 @@
 {
-  "name": "bitbucket-trello",
-  "version": "0.0.2",
+  "name": "hook-to-trello",
+  "version": "0.0.3",
   "private": true,
   "dependencies": {
     "LiveScript": "*",
@@ -11,11 +11,12 @@
     "async": "*",
     "prelude-ls": "*",
     "less": "*",
-    "request": "*"
+    "request": "*",
+    "optimist": "~0.5.2"
   },
   "scripts": {
     "test": "mocha",
-    "postinstall":"make build",
+    "postinstall": "make build",
     "start": "node build/app.js"
   },
   "devDependencies": {
