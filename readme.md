@@ -7,13 +7,12 @@ For more information about webhooks you can read at [github](https://help.github
 ### Example
 
 ```
-$ git commit -m 'Finalized details  --move 124 --to finish'
+$ git commit -m 'Finalized details done #124'
 ```
 
-It will update `card #124`: add commit message + link as comment and move it to a list `finish`. Also you can specify `noco=1` if you don't want to write a comment.  
-The message and commands shold be spareted by two spaces, by default. You can change it.
+It will update `card #124`: add commit message + link as comment and move it to a list `finish`.  
 
-### Config
+### Config App
 
 Below is script for heroku cloud. But you can host at any hosting for node.js.  
 
@@ -49,11 +48,15 @@ For example you can host `users.json` in your dropbox, it very useful if you wan
 
 ```
 $ heroku create
+$ heroku config:set KEY <your admin board key>
+$ heroku config:set TOKEN <your admin board token>
+$ heroku config:set USERS <your JSON file (https://dl.dropboxusercontent.com/s/a1nwtlzdpf/users.json)>
 $ git push heroku <current branch>:master
 ```
 If deploy was good, you can find application url in stdout. Usual it look like this: `https://sheltered-brook-4402.herokuapp.com`. This _URL_ to be useful in the next step.  
 After that you need setup you repo for webhook. Read about it [here](https://help.github.com/articles/post-receive-hooks) or [here](https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management).  
 
+### Setup repo
 For setup the repo simply add your heroku app _URL_ + "/`<prefix>`/`<board_id>`" as a webhook url under "admin" for your repository. Where `<prefix>` is `g` for github or `b` for bitbucket. And `<board_id>` you can get from the Trello board _URL_, for example https://trello.com/board/trello-development/4d5ea62fd76aa1136000000c the board id is 4d5ea62fd76aa1136000000ca  
 
 Example:  
@@ -70,4 +73,4 @@ This is a one-time operation for each user:
 ### TODO
 
 - actions for checklists;
-- simplify command notations.
+- ~~simplify command notations~~.
