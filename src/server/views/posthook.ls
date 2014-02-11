@@ -30,10 +30,8 @@ class BitTrelloClient
 
   get-card: (id, next) -->
     err, resp, body <~ request @sign "#{@URL}boards/#{@board.id}/cards/#{id}"
-    try
-      next err, JSON.parse body
-    catch e
-      next err || e, body
+    try body = JSON.parse body
+    next err, body
 
   add-comment: (id, comment="", next=(->)) -->
     err, resp, body <~ request do
@@ -41,10 +39,9 @@ class BitTrelloClient
       method: "POST"
       json: 
         text: comment
-    try
-      next err, JSON.parse body
-    catch e
-      next err || e, body
+
+    try body = JSON.parse body
+    next err, body
 
   update-card: (id, params, next) -->
     err, resp, body <~ request do
@@ -52,50 +49,55 @@ class BitTrelloClient
       method: "PUT"
       json: params
 
-    next err
+    next err, body
 
   make-message: (commit) ->
     "#{commit.author}: #{commit.message}\n\n#{@payload.canon_url + @payload.repository.absolute_url}commits/#{commit.raw_node}"
 
-  action-move: (commit, next) -->
-    err, card <~ @get-card commit.options.move
-    unless commit.options.noco? 
-      err, comment-result <~ @add-comment card.id, @make-message(commit)
-    
-    list = @match-list commit.options.to
-    if list?
-      err, updt <~ @update-card card.id, {idList: list.id}
-      next!
-    else
-      console.log "list not found", commit.options.to
-      process.next-tick next
-
-  handle-commit: (commit={}, next) ~~>
-    commit = {} <<< default-commit <<< commit <<< help.parse commit.message
+  handle-commit: (commit={}, next) ->
+    commit = {} <<< default-commit <<< commit <<< help.parse @board.lists, commit.message
     err <~ @set-action-author commit
     return next err if err?
+    return next! if !commit.card?
 
-    console.log "handle-commit", commit
-    for k,v of commit.options
-      switch k
-      | "move" => return @action-move commit, next
+    err, card <~ @get-card commit.card
+    return console.log ("" + err).red if err? && !(err == 1)
+    
+    err <~ async.series [
+      (cbk) ~>
+        return cbk 1 if !commit.card? # card id not found => exit 1
+        # add message
+        err <~ @add-comment card.id, @make-message(commit)
+        cbk err
+
+      (cbk) ~>
+        return cbk! if !commit.list?
+        # move
+        err <~ @update-card card.id, {idList: commit.list}
+        cbk err
+    ]
+    return console.log ("" + err).red if err? && !(err == 1)
 
   set-action-author: (commit, next) ->
-    return process.next-tick(next) if @token? and @key?
-    
-    err, people <~ help.read-file conf.users
-    
-    if err? or !conf.users?
-      # default token & key
+    if !conf.users?
       @token = conf.token
       @key   = conf.key
-      return next err if err?
+      return next!
 
-    try people = JSON.parse people
-    unless typeof! people is "Object"
-      return next new Error("The file type(#{typeof! people}) is not as expected.")
+    # cache for current http POST request
+    err <~ (cbk) ~>
+      return cbk null, @_people if @_people?
+      err, people <~ help.read-file conf.users
+      @_people = people
+      unless typeof! people is "Object"
+        return next new Error("The type (#{typeof! people}) is not expected.")
 
-    for k,v of people
+      cbk err
+    return next err if err
+
+    
+
+    for k,v of @_people
       for alias in v.aliases || [k]
         if alias is @get-commit-user commit
           @token = v.token
@@ -131,21 +133,23 @@ module.exports = (req,res) ->
    * LET'S GO
    */
   try
+    throw 1 if !req.body.payload?
     msg = JSON.parse req.body.payload || '{}'
   catch
-    msg = req.body.payload
+    msg = req.body.payload ? req.body
 
   console.log "[__POST__]".green, "by #{msg.user || msg.pusher?.name}".grey
 
-  Client = switch req.params.provider
-  | "b"        => BitTrelloClient
-  | "g"        => GitHubTrelloClient
-  | otherwise  => BitTrelloClient
+  client = switch req.params.provider
+  | "b"        => new BitTrelloClient    body, msg
+  | "g"        => new GitHubTrelloClient body, msg
+  | otherwise  => null
 
-  client = new Client body, msg
-  
-  # handle in background
-  async.map msg.commits, client.handle-commit, (err)-> console.log err.toString!.red if err?
+  return res.json 404, error: "not found" if !client?
+
+  acc = []
+  msg.commits?.for-each? (i) -> acc.push -> client.handle-commit i, it
+  async.series acc, (err)-> console.log err.toString!.red if err?
 
   res.json do
     req-body: body
