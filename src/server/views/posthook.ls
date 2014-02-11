@@ -11,15 +11,10 @@ require! {
 
 default-commit = {}
 
-class BitTrelloClient
+class BitBucketTrelloClient
 
   (@board, @payload, @token, @key) ->
   
-  match-list: (name) ->
-    for list in @board.lists
-      return list if list.name.match new RegExp name, "i"
-    null
-
   URL:"https://api.trello.com/1/"
 
   sign: (url) ->
@@ -113,7 +108,7 @@ class BitTrelloClient
   get-commit-user: (commit) ->
     @payload.user
 
-class GitHubTrelloClient extends BitTrelloClient
+class GitHubTrelloClient extends BitBucketTrelloClient
 
   get-commit-user: (commit) ->
     commit.committer?.name 
@@ -141,7 +136,7 @@ module.exports = (req,res) ->
   console.log "[__POST__]".green, "by #{msg.user || msg.pusher?.name}".grey
 
   client = switch req.params.provider
-  | "b"        => new BitTrelloClient    body, msg
+  | "b"        => new BitBucketTrelloClient    body, msg
   | "g"        => new GitHubTrelloClient body, msg
   | otherwise  => null
 
