@@ -43,6 +43,7 @@ The file structure should look like this:
 
 If aliases is not specified, application will be use each key of object as alias.  
 By default the file name is `./users.json`. Of course you can change it in `USERS` environ variable.
+For example you can host `users.json` in your dropbox, it very useful if you want to change users dynamically.
 
 ### Deploy
 
