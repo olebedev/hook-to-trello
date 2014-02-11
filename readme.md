@@ -13,7 +13,7 @@ $ git commit -m 'Finalized details  --move 124 --to finish'
 It will update `card #124`: add commit message + link as comment and move it to a list `finish`. Also you can specify `noco=1` if you don't want to write a comment.  
 The message and commands shold be spareted by two spaces, by default. You can change it.
 
-### Config & Deploy
+### Config
 
 Below is script for heroku cloud. But you can host at any hosting for node.js.  
 
@@ -40,8 +40,11 @@ The file structure should look like this:
   }
 }
 ```
-If aliases is not specified, application will be use each key of object as alias. 
 
+If aliases is not specified, application will be use each key of object as alias.  
+By default the file name is `./users.json`. Of course you can change it in `USERS` environ variable.
+
+### Deploy
 
 ```
 $ heroku create
@@ -65,4 +68,5 @@ This is a one-time operation for each user:
 
 ### TODO
 
-Actions for checklists.
+- actions for checklists;
+- simplify command notations.
