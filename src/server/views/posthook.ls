@@ -70,25 +70,20 @@ class BitTrelloClient
       console.log "list not found", commit.options.to
       process.next-tick next
 
-  handle-commit: (commit={}, next) -->
+  handle-commit: (commit={}, next) ~~>
     commit = {} <<< default-commit <<< commit <<< help.parse commit.message
     err <~ @set-action-author commit
     return next err if err?
+
+    console.log "handle-commit", commit
     for k,v of commit.options
       switch k
       | "move" => return @action-move commit, next
 
-  read-http-file: (url, next) ->
-
-    err, resp, body <- request url
-    console.log "fetch file from http".green, url.grey
-    next err, body
-
   set-action-author: (commit, next) ->
     return process.next-tick(next) if @token? and @key?
     
-    fn = if conf.users.match(//http//)? then @read-http-file else fs.read-file
-    err, people <~ fn conf.users
+    err, people <~ help.read-file conf.users
     
     if err? or !conf.users?
       # default token & key
@@ -102,7 +97,7 @@ class BitTrelloClient
 
     for k,v of people
       for alias in v.aliases || [k]
-        if alias is @payload.user || commit.committer.name # the second for github
+        if alias is @get-commit-user commit
           @token = v.token
           @key = v.key
           return next!
@@ -113,16 +108,24 @@ class BitTrelloClient
 
     next!
 
+  get-commit-user: (commit) ->
+    @payload.user
+
 class GitHubTrelloClient extends BitTrelloClient
+
+  get-commit-user: (commit) ->
+    commit.committer?.name 
 
   make-message: (commit) ->
     "#{commit.committer.name}: #{commit.message}\n\n#{commit.url}"
 
 module.exports = (req,res) ->
   req.params.id = req.params.provider unless req.params.id?
-  err, resp, body <~ request "https://api.trello.com/1/board/#{req.params.id}?token=#{conf.token}&key=#{conf.key}&lists=all"
+  url = "https://api.trello.com/1/board/#{req.params.id}?token=#{conf.token}&key=#{conf.key}&lists=all"
+  err, resp, body <~ request url
   try body = JSON.parse body
-  return res.send body if //invalid//.test body
+  if //invalid//.test body
+    return res.send body 
 
   /**
    * LET'S GO
@@ -140,13 +143,10 @@ module.exports = (req,res) ->
   | otherwise  => BitTrelloClient
 
   client = new Client body, msg
-  acc = []
-  for i in msg.commits || []
-    ((i)->
-      acc.push -> client.handle-commit i, &0
-    )(i)
+  
+  # handle in background
+  async.map msg.commits, client.handle-commit, (err)-> console.log err.toString!.red if err?
 
-  async.waterfall acc, (err)-> console.log err.toString!.red if err?
   res.json do
     req-body: body
     body: req.body
