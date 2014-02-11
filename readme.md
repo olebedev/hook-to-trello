@@ -10,7 +10,7 @@ For more information about webhooks you can read at [github](https://help.github
 $ git commit -m 'Finalized details done #124'
 ```
 
-It will update `card #124`: add commit message + link as comment and move it to a list `finish`.  
+It will update `card #124`: add commit message + link as comment and move it to a list `done`.  
 
 ### Config App
 
