@@ -36,6 +36,8 @@ exports.parse = (list, msg) ->
       commit.list = item.id
       return commit
 
+  return commit
+
 exports.read-file = (url, next) ->
   if url.match(//http//)?
     err, resp, body <- request url
