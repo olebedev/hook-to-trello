@@ -14,7 +14,7 @@ default-commit = {}
 class BitBucketTrelloClient
 
   (@board, @payload, @token, @key) ->
-  
+
   URL:"https://api.trello.com/1/"
 
   sign: (url) ->
@@ -32,7 +32,7 @@ class BitBucketTrelloClient
     err, resp, body <~ request do
       url: @sign "#{@URL}cards/#{id}/actions/comments"
       method: "POST"
-      json: 
+      json:
         text: comment
 
     try body = JSON.parse body
@@ -57,7 +57,7 @@ class BitBucketTrelloClient
 
     err, card <~ @get-card commit.card
     return console.log ("" + err).red if err? && !(err == 1)
-    
+
     err <~ async.series [
       (cbk) ~>
         return cbk 1 if !commit.card? # card id not found => exit 1
@@ -74,23 +74,18 @@ class BitBucketTrelloClient
     return console.log ("" + err).red if err? && !(err == 1)
 
   set-action-author: (commit, next) ->
-    if !conf.users?
-      @token = conf.token
-      @key   = conf.key
-      return next!
-
     # cache for current http POST request
     err <~ (cbk) ~>
       return cbk null, @_people if @_people?
       err, people <~ help.read-file conf.users
       @_people = people
       unless typeof! people is "Object"
-        return next new Error("The type (#{typeof! people}) is not expected.")
+        return next new Error("Could not read users object from users configuration file. Expected Object but found #{typeof! people}.")
 
       cbk err
     return next err if err
 
-    
+
 
     for k,v of @_people
       for alias in v.aliases || [k]
@@ -111,7 +106,7 @@ class BitBucketTrelloClient
 class GitHubTrelloClient extends BitBucketTrelloClient
 
   get-commit-user: (commit) ->
-    commit.committer?.name 
+    commit.committer?.name
 
   make-message: (commit) ->
     "#{commit.committer.name}: #{commit.message}\n\n#{commit.url}"
@@ -122,7 +117,7 @@ module.exports = (req,res) ->
   err, resp, body <~ request url
   try body = JSON.parse body
   if //invalid//.test body
-    return res.send body 
+    return res.send body
 
   /**
    * LET'S GO
