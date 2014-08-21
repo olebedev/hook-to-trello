@@ -45,6 +45,10 @@ exports.read-file = (url, next) ->
     return next err, body
 
   else
+    exists <~ fs.exists url
+    if !exists
+      console.log ("Could not read users file at #{url}. Assuming empty users object.")
+      return next null, {}
     err, body <~ fs.read-file url
     try body = JSON.parse body
     return next err, body
