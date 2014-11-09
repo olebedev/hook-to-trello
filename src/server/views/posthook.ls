@@ -4,8 +4,8 @@ require! {
   \request
   \async
   \../../conf
-  _:\prelude-ls
-  qs: \querystring
+  "prelude-ls": \_
+  "querystring": \qs
   \./help
 }
 

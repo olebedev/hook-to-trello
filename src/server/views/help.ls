@@ -2,9 +2,9 @@ require! {
   \colors
   \request
   \optimist
-  _:\prelude-ls
-  \../../conf
+  "prelude-ls": \_
   \fs
+  \../../conf
 }
 
 # { id: '51ac788907d835ca22001f19',
